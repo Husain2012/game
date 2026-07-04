@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لعبة الحساب الذكية PRO</title>
+
+<style>
+    :root {
+        --primary-bg: linear-gradient(135deg, #667eea, #764ba2);
+        --glass-bg: rgba(255, 255, 255, 0.15);
+        --text-color: #ffffff;
+        --accent-yellow: #f1c40f;
+        --accent-green: #00ff99;
+        --accent-red: #ff4d4d;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: var(--primary-bg);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        direction: rtl;
+        color: var(--text-color);
+        overflow: hidden;
+    }
+
+    .dark {
+        --primary-bg: #0d1117;
+        --glass-bg: rgba(255, 255, 255, 0.05);
+    }
+
+    .game-container {
+        position: relative;
+        width: 90%;
+        max-width: 420px;
+    }
+
+    .game-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 28px;
+        padding: 30px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        text-align: center;
+        transition: transform 0.3s ease, cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    h2 { font-size: 28px; margin-top: 0; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+
+    .top-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        gap: 10px;
+    }
+
+    .btn-icon {
+        background: white;
+        color: #333;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        transition: 0.3s;
+    }
+    .btn-icon:hover { transform: translateY(-2px); }
+
+    .btn-pause { background: var(--accent-yellow); color: #000; flex-grow: 1; }
+
+    .stats-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        margin: 15px 0;
+    }
+
+    .life-display { font-size: 26px; letter-spacing: 5px; min-height: 38px; }
+
+    .level-select {
+        padding: 10px;
+        border-radius: 12px;
+        border: none;
+        width: 110px;
+        font-weight: bold;
+        background: white;
+        color: #333;
+        cursor: pointer;
+    }
+
+    .op-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 25px;
+    }
+
+    .op-btn {
+        background: white;
+        color: #4a5568;
+        font-size: 22px;
+        font-weight: bold;
+        padding: 14px;
+        border-radius: 14px;
+        border: none;
+        cursor: pointer;
+        transition: 0.2s;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .op-btn:hover { transform: translateY(-3px); background: #f7fafc; }
+    .op-btn.active { background: var(--accent-yellow); color: black; }
+
+    #question { font-size: 36px; margin: 25px 0; font-weight: bold; min-height: 50px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+
+    .timer { font-size: 18px; color: #e2e8f0; margin-bottom: 15px; font-weight: 500; }
+
+    input[type="number"] {
+        width: 85%;
+        padding: 15px;
+        font-size: 24px;
+        border-radius: 16px;
+        border: 2px solid transparent;
+        text-align: center;
+        margin-bottom: 15px;
+        outline: none;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.15);
+        transition: 0.3s;
+    }
+    input[type="number"]:focus { border-color: var(--accent-yellow); }
+
+    #checkBtn {
+        width: 100%;
+        padding: 16px;
+        background: #ffffff;
+        color: #4c51bf;
+        font-size: 18px;
+        font-weight: bold;
+        border: none;
+        border-radius: 16px;
+        cursor: pointer;
+        transition: 0.3s;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    #checkBtn:hover { background: #f7fafc; transform: translateY(-1px); }
+    #checkBtn:disabled { opacity: 0.4; transform: none; cursor: not-allowed; }
+
+    .xp-container {
+        background: rgba(0,0,0,0.25);
+        height: 10px;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 20px 0;
+    }
+    .xp-bar { background: var(--accent-green); height: 100%; width: 0%; transition: 0.4s ease-out; }
+
+    .footer-stats { display: flex; justify-content: space-around; font-weight: bold; color: #edf2f7; font-size: 16px; }
+
+    /* الشاشات المنبثقة المخصصة */
+    .modal {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(26, 32, 44, 0.95);
+        border-radius: 28px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 30px;
+        box-sizing: border-box;
+        z-index: 10;
+        opacity: 0; pointer-events: none;
+        transition: 0.3s ease;
+    }
+    .modal.active { opacity: 1; pointer-events: auto; }
+
+    .modal h3 { font-size: 32px; margin-bottom: 10px; }
+    .modal p { font-size: 18px; margin-bottom: 25px; color: #cbd5e0; }
+
+    .btn-main {
+        background: var(--accent-green);
+        color: #1a202c;
+        border: none;
+        padding: 14px 40px;
+        font-size: 18px;
+        font-weight: bold;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: 0.2s;
+        box-shadow: 0 4px 14px rgba(0, 255, 153, 0.3);
+    }
+    .btn-main:hover { transform: scale(1.05); }
+
+    /* تأثير الاهتزاز عند الخطأ */
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-8px); }
+        75% { transform: translateX(8px); }
+    }
+    .shake { animation: shake 0.3s ease-in-out; border: 2px solid var(--accent-red) !important; }
+</style>
+</head>
+<body>
+
+<div class="game-container">
+    <div class="game-card" id="gameCard">
+        <div class="top-controls">
+            <button class="btn-icon" onclick="toggleDark()">🌙</button>
+            <button id="pauseBtn" class="btn-icon btn-pause" onclick="togglePause()" disabled>⏸️ إيقاف</button>
+            <select id="level" class="level-select" onchange="resetGameProgress()">
+                <option value="easy">سهل</option>
+                <option value="medium">متوسط</option>
+                <option value="hard">صعب</option>
+            </select>
+        </div>
+
+        <h2>🧠 لعبة الحساب PRO</h2>
+
+        <div class="stats-row">
+            <div class="life-display" id="life">❤️❤️❤️</div>
+        </div>
+
+        <div class="xp-container"><div class="xp-bar" id="xpBar"></div></div>
+
+        <div class="op-container">
+            <button class="op-btn" id="op-+" onclick="selectOperation('+')">+</button>
+            <button class="op-btn" id="op--" onclick="selectOperation('-')">−</button>
+            <button class="op-btn" id="op-*" onclick="selectOperation('*')">×</button>
+            <button class="op-btn" id="op-/" onclick="selectOperation('/')">÷</button>
+        </div>
+
+        <div id="question">اختر عملية لبدء اللعب</div>
+
+        <div class="timer">⏱️ الوقت المتبقي: <span id="time">10</span> ثانية</div>
+
+        <input type="number" id="answer" placeholder="الإجابة هنا" disabled>
+        <button id="checkBtn" onclick="checkAnswer()" disabled>تحقق (Enter)</button>
+
+        <p id="result" style="height: 25px; font-weight: bold; margin: 15px 0; font-size: 18px;"></p>
+
+        <div class="footer-stats">
+            <span>⭐ النقاط: <span id="score">0</span></span>
+            <span>🏆 أعلى نتيجة: <span id="highScore">0</span></span>
+            <span>🎮 المستوى: <span id="playerLevel">1</span></span>
+        </div>
+    </div>
+
+    <div class="modal" id="gameOverModal">
+        <h3 style="color: var(--accent-red);">💥 انتهت اللعبة!</h3>
+        <p id="gameOverText">لقد انتهت محاولاتك الحالية.</p>
+        <div style="font-size: 20px; margin-bottom: 30px; text-align: center;">
+            <div>النقاط المحققة: <span id="finalScore" style="color: var(--accent-yellow); font-weight:bold;">0</span></div>
+            <div style="font-size: 16px; margin-top: 5px;">أعلى نتيجة مسجلة: <span id="modalHighScore">0</span></div>
+        </div>
+        <button class="btn-main" onclick="restartGame()">محاولة أخرى 🔄</button>
+    </div>
+</div>
+
+<script>
+    let correctAnswer = 0, score = 0, life = 3, xp = 0, playerLevel = 1;
+    let timer, timeLeft = 10, currentOp = '';
+    let isPaused = false;
+
+    // تحميل أعلى نتيجة مخزنة في الجهاز عند تشغيل التطبيق
+    let highScore = localStorage.getItem("math_game_high_score") || 0;
+    document.getElementById("highScore").innerText = highScore;
+
+    function toggleDark() { document.body.classList.toggle("dark"); }
+
+    function togglePause() {
+        if (!currentOp) return;
+        isPaused = !isPaused;
+        let pBtn = document.getElementById("pauseBtn");
+        let inputField = document.getElementById("answer");
+        if (isPaused) {
+            clearInterval(timer);
+            pBtn.innerText = "▶️ استئناف";
+            inputField.disabled = true;
+            document.getElementById("checkBtn").disabled = true;
+        } else {
+            pBtn.innerText = "⏸️ إيقاف";
+            inputField.disabled = false;
+            document.getElementById("checkBtn").disabled = false;
+            inputField.focus();
+            startTimer(true);
+        }
+    }
+
+    function startTimer(resume = false) {
+        clearInterval(timer);
+        if (!resume) timeLeft = 10;
+        document.getElementById("time").innerText = timeLeft;
+        timer = setInterval(() => {
+            timeLeft--;
+            document.getElementById("time").innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                triggerWrongAnswerVisuals();
+                loseLife();
+            }
+        }, 1000);
+    }
+
+    function selectOperation(op) {
+        // تحديث شكل الزر النشط للتأكيد البصري
+        document.querySelectorAll('.op-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`op-${op}`).classList.add('active');
+        newQuestion(op);
+    }
+
+    function newQuestion(op) {
+        currentOp = op;
+        const inputField = document.getElementById("answer");
+        inputField.disabled = false;
+        document.getElementById("checkBtn").disabled = false;
+        document.getElementById("pauseBtn").disabled = false;
+        
+        inputField.value = "";
+        inputField.focus();
+        
+        startTimer();
+
+        let r = document.getElementById("level").value == "easy" ? 10 : (document.getElementById("level").value == "medium" ? 30 : 60);
+        let n1 = Math.floor(Math.random() * r) + 1;
+        let n2 = Math.floor(Math.random() * r) + 1;
+
+        if (op == '/') {
+            correctAnswer = n1; 
+            document.getElementById("question").innerText = (n1 * n2) + " ÷ " + n2;
+        } else {
+            if (op == '+') correctAnswer = n1 + n2;
+            if (op == '-') { if(n1 < n2) [n1, n2] = [n2, n1]; correctAnswer = n1 - n2; }
+            if (op == '*') correctAnswer = n1 * n2;
+            document.getElementById("question").innerText = n1 + " " + (op == '*' ? '×' : op) + " " + n2;
+        }
+        document.getElementById("result").innerText = "";
+    }
+
+    function checkAnswer() {
+        let inputField = document.getElementById("answer");
+        let u = parseInt(inputField.value);
+        if (isNaN(u)) return;
+        
+        clearInterval(timer);
+        if (u === correctAnswer) {
+            document.getElementById("result").innerHTML = "<span style='color:var(--accent-green)'>✔ ممتاز! إجابة صحيحة</span>";
+            score++; xp += 20;
+            if (xp >= 100) { playerLevel++; xp = 0; document.getElementById("playerLevel").innerText = playerLevel; }
+            
+            // تحديث أعلى نتيجة وحفظها محلياً فوراً
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem("math_game_high_score", highScore);
+                document.getElementById("highScore").innerText = highScore;
+            }
+
+            setTimeout(() => newQuestion(currentOp), 800);
+        } else {
+            document.getElementById("result").innerHTML = "<span style='color:var(--accent-red)'>✖ خطأ! الإجابة الصحيحة: " + correctAnswer + "</span>";
+            triggerWrongAnswerVisuals();
+            loseLife();
+        }
+        document.getElementById("score").innerText = score;
+        document.getElementById("xpBar").style.width = xp + "%";
+    }
+
+    function triggerWrongAnswerVisuals() {
+        let card = document.getElementById("gameCard");
+        let inputField = document.getElementById("answer");
+        
+        card.classList.add("shake");
+        inputField.classList.add("shake");
+        
+        setTimeout(() => {
+            card.classList.remove("shake");
+            inputField.classList.remove("shake");
+        }, 300);
+    }
+
+    function loseLife() {
+        life--;
+        document.getElementById("life").innerText = "❤️".repeat(life) || "💀";
+        if (life <= 0) {
+            clearInterval(timer);
+            showGameOver();
+        } else {
+            setTimeout(() => newQuestion(currentOp), 1600);
+        }
+    }
+
+    function showGameOver() {
+        // إظهار شاشة النهاية بشكل منبثق أنيق وتعطيل حقول الإدخال
+        document.getElementById("answer").disabled = true;
+        document.getElementById("checkBtn").disabled = true;
+        
+        document.getElementById("finalScore").innerText = score;
+        document.getElementById("modalHighScore").innerText = highScore;
+        document.getElementById("gameOverModal").classList.add("active");
+    }
+
+    function restartGame() {
+        // تصفير المتغيرات برمجياً بدون عمل ريفريش كامل للصفحة لتسريع الأداء
+        score = 0;
+        life = 3;
+        xp = 0;
+        playerLevel = 1;
+        isPaused = false;
+        
+        document.getElementById("score").innerText = score;
+        document.getElementById("playerLevel").innerText = playerLevel;
+        document.getElementById("xpBar").style.width = "0%";
+        document.getElementById("life").innerText = "❤️❤️❤️";
+        document.getElementById("pauseBtn").innerText = "⏸️ إيقاف";
+        
+        // إغلاق النافذة المنبثقة والبدء من جديد
+        document.getElementById("gameOverModal").classList.remove("active");
+        if (currentOp) {
+            newQuestion(currentOp);
+        } else {
+            document.getElementById("question").innerText = "اختر عملية لبدء اللعب";
+        }
+    }
+
+    function resetGameProgress() {
+        // عند تغيير مستوى الصعوبة أثناء اللعب يتم تصفير الجولة تلقائياً
+        if (currentOp) restartGame();
+    }
+
+    // تفعيل زر Enter على الكيبورد
+    document.getElementById("answer").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            if(!document.getElementById("checkBtn").disabled) {
+                checkAnswer();
+            }
+        }
+    });
+</script>
+</body>
+</html>
